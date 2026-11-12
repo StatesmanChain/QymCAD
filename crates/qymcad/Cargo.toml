@@ -59,7 +59,8 @@ ab_glyph = "0.2.32"
 # ONLY FOR THE CHECK that the viewport shader parses: a broken shader shows itself when the window opens,
 # which is too late and only on a machine with a GPU.
 naga = { version = "29", features = ["wgsl-in"] }
-
+serde_json = "1.0"
+ureq = { version = "2.10", features = ["json"] }
 [dev-dependencies]
 qymcad-kernel = { workspace = true, features = ["specimens"] } # the probes build the bodies they write and import
 
