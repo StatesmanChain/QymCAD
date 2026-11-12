@@ -4,7 +4,7 @@
 //! reach the program through its session alone, so they touch it the way a person does and nothing else.
 
 use std::process::ExitCode;
-
+pub mod ai_assistant;
 pub use gui::session::{
     pos2, vec2, Arg, Badge, Chooser, ClickTool, Datum, Document, FaceKinds, Feature, Gizmo, InRow, Inspection, JointInfo, Key, Kept, Kind, Machine, Modifiers, Notice, Parameter, Part, Picture,
     PointerButton, Pos2, Rect, Session, SketchInfo, SketchPick, SketchShape, SnapGlyph, Solid, Tone, Vec2, Widget, WordAt, time_budget,
