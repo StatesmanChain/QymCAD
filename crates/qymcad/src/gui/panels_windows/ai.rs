@@ -72,6 +72,17 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
     let state = state(ctx);
     let Ok(mut chat) = state.lock() else { return };
     receive(&mut chat);
+    for file in ctx.input(|i| i.raw.dropped_files.clone()) {
+      if let Some(path) = file.path {
+      let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+      if matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "webp") {
+      if !chat.prompt.is_empty() && !chat.prompt.ends_with('\n') {
+      chat.prompt.push('\n');
+      }
+      chat.prompt.push_str(&path.display().to_string());
+      }
+      }
+    }  
     let mut open = true;
     egui::Window::new(crate::i18n::tr("ai-title")).id(egui::Id::new("win_ai")).open(&mut open).default_width(500.0).default_height(700.0).show(ctx, |ui| {
         egui::ScrollArea::vertical().max_height(700.0).show(ui, |ui| {
