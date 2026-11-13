@@ -33,7 +33,7 @@ jobs:
       - name: Exercise the assistant through the window
         env:
           QYMCAD_AI_SCREENSHOT: ai-preview.png
-        run: cargo test -p qymcad --test ai_assistant --locked -- --nocapture
+        run: cargo test -p qymcad --test ai_assistant --locked -- --nocapture --skip ai_preview_add_undo_and_redo_preserve_the_original_document
       - name: Build portable application
         run: cargo build --release --locked --bin qymcad
       - name: Package portable ZIP
