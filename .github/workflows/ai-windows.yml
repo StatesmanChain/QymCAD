@@ -1,0 +1,62 @@
+name: QymCAD AI portable Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/ai-assistant]
+permissions:
+  contents: read
+concurrency:
+  group: qymcad-ai-windows
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: 3
+      QYMCAD_VERSION: 0.1.1-ai.1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Prepare the released geometry kernel
+        shell: pwsh
+        run: ./packaging/win/prepare-ai-kernel.ps1
+      - name: Check all targets
+        run: cargo check --workspace --all-targets --locked
+      - name: Check recipes and API protocol
+        run: |
+          cargo test -p qymcad-core --lib ai:: --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test -p qymcad-ai --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Exercise the assistant through the window
+        env:
+          QYMCAD_AI_SCREENSHOT: ai-preview.png
+        run: cargo test -p qymcad --test ai_assistant --locked -- --nocapture
+      - name: Build portable application
+        run: cargo build --release --locked --bin qymcad
+      - name: Package portable ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force dist/QymCAD-AI | Out-Null
+          Copy-Item "$env:AI_PORTABLE_DIR/*.dll" dist/QymCAD-AI/
+          Copy-Item target/release/qymcad.exe dist/QymCAD-AI/
+          Copy-Item LICENSE dist/QymCAD-AI/LICENSE.txt
+          Copy-Item THIRD-PARTY-NOTICES.md dist/QymCAD-AI/
+          Copy-Item AI_README_RU.md dist/QymCAD-AI/
+          Compress-Archive dist/QymCAD-AI -DestinationPath dist/QymCAD-AI-Windows-x64.zip
+      - name: Save portable ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/QymCAD-AI-Windows-x64.zip
+          archive: false
+          if-no-files-found: error
+      - name: Save preview evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ai-preview
+          path: ai-preview.png
+          if-no-files-found: ignore

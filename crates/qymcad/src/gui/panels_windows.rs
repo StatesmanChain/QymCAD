@@ -19,3 +19,6 @@ mod faults;
 pub(crate) use faults::*;
 mod library;
 pub(crate) use library::*;
+
+mod ai;
+pub(crate) use ai::apply_ai_part;

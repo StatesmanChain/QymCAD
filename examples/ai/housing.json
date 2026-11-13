@@ -1,0 +1,6 @@
+{"message":"Корпус 150 x 100 x 60 мм, стенки и дно 3 мм, сверху открыт.","plan":{"name":"AI housing","operations":[
+{"id":"outer","type":"box","size":{"x":150,"y":100,"z":60}},
+{"id":"inner","type":"box","size":{"x":144,"y":94,"z":60}},
+{"id":"cavity","type":"move","source":"inner","offset":{"x":0,"y":0,"z":3}},
+{"id":"housing","type":"boolean","base":"outer","tool":"cavity","operation":"cut"}
+]}}

@@ -185,6 +185,8 @@ impl Default for Caches {
 /// three. As a set, "close everything" is one line and "is anything open" is one line.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum WinKind {
+    /// The CAD assistant.
+    Ai,
     /// "Save as a template": asks for a name.
     SaveTemplate,
     /// The start screen. It comes up at launch and from a menu item; any action dismisses it.
@@ -220,7 +222,8 @@ pub enum WinKind {
 impl WinKind {
     /// EVERY KIND, so that a walk over the windows cannot silently miss one added later. A guard checks that the
     /// count here matches the number of variants declared above.
-    pub const ALL: [WinKind; 15] = [
+    pub const ALL: [WinKind; 16] = [
+        WinKind::Ai,
         WinKind::SaveTemplate,
         WinKind::Start,
         WinKind::DocProps,

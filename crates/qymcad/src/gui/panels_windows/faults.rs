@@ -5,6 +5,7 @@ use super::*;
 /// THE WINDOWS OF THE DOCUMENT's numbers and faults, drawn in one pass of the frame: the parameters and the faults.
 /// The window of faults leads to the parameters' table for a parameter, and both carry out their requests together.
 pub(crate) fn doc_windows(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
+    super::ai::window(wc, ctx);
     params_window(wc, ctx);
     faults_window(wc, ctx);
 }

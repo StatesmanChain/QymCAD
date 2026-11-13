@@ -115,3 +115,32 @@ pub(crate) fn parts_library_window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui:
     }
     wc.win.set(WinKind::PartsLibrary, open);
 }
+
+/// Read and insert a library part through the document window context.
+pub(crate) fn insert_library_part(wc: &mut qymcad_ui_state::WinCtx, src: crate::parts_library::PartSource) {
+    let loaded = match &src {
+        crate::parts_library::PartSource::User(p) => qymcad_io::load_part(&p.to_string_lossy()),
+        crate::parts_library::PartSource::Embedded(rel) => match crate::parts_library::embedded_bytes(rel) {
+            Some(b) => qymcad_io::load_part_bytes(b),
+            None => Err(crate::i18n::tr("lib-part-not-found")),
+        },
+    };
+    let loaded = match loaded {
+        Ok(l) => l,
+        Err(e) => {
+            *wc.status = Notice::error(crate::i18n::tr1("lib-load-error", "error", &e.to_string()));
+            return;
+        }
+    };
+    let target = parts_insert_target(&mut *wc.project);
+    match wc.project.graft(&loaded.project, target, &crate::i18n::name) {
+        Some(_) => {
+            qymcad_ui_state::mark_dirty_for_rebuild(&mut wc.rebuild()); // the document is marked; the scheduler does the computing
+            invalidate(&mut *wc.regen);
+            *wc.status = Notice::info(crate::i18n::tr1("lib-part-inserted", "name", &loaded.manifest.name));
+        }
+        None => {
+            *wc.status = Notice::refusal(crate::i18n::tr("lib-no-assembly"));
+        }
+    }
+}

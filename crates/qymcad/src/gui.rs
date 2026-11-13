@@ -211,6 +211,11 @@ impl App {
     pub(crate) fn do_win_asks(&mut self, asks: Vec<WinAsk>, ctx: &egui::Context) {
         for a in asks {
             match a {
+                WinAsk::AiPart(part) => {
+                    if let Some(id) = crate::gui::panels_windows::apply_ai_part(&mut self.part_ctx(), &part) {
+                        self.enter_component(id);
+                    }
+                }
                 WinAsk::Nav(n) => self.do_nav(n, ctx),
                 WinAsk::NavGuarded(n) => self.request_nav(n, ctx),
                 WinAsk::Save => self.save_project(),
@@ -1356,31 +1361,7 @@ impl App {
 impl App {
     /// Load a `.qpart` from a source and graft it into the target assembly (`graft`, then `regenerate_all`).
     fn insert_part_from(&mut self, src: crate::parts_library::PartSource) {
-        let loaded = match &src {
-            crate::parts_library::PartSource::User(p) => qymcad_io::load_part(&p.to_string_lossy()),
-            crate::parts_library::PartSource::Embedded(rel) => match crate::parts_library::embedded_bytes(rel) {
-                Some(b) => qymcad_io::load_part_bytes(b),
-                None => Err(crate::i18n::tr("lib-part-not-found")),
-            },
-        };
-        let loaded = match loaded {
-            Ok(l) => l,
-            Err(e) => {
-                self.status = Notice::error(crate::i18n::tr1("lib-load-error", "error", &e.to_string()));
-                return;
-            }
-        };
-        let target = parts_insert_target(&mut self.project);
-        match self.project.graft(&loaded.project, target, &crate::i18n::name) {
-            Some(_) => {
-                qymcad_ui_state::mark_dirty_for_rebuild(&mut self.rebuild_ctx()); // the document is marked; the scheduler does the computing
-                invalidate(&mut self.regen);
-                self.status = Notice::info(crate::i18n::tr1("lib-part-inserted", "name", &loaded.manifest.name));
-            }
-            None => {
-                self.status = Notice::refusal(crate::i18n::tr("lib-no-assembly"));
-            }
-        }
+        crate::gui::panels_windows::insert_library_part(&mut self.win_ctx(&mut Vec::new()), src);
     }
 
     /// Open the "Save as a standard part" dialogue for component `cid`. The name comes from the component,
