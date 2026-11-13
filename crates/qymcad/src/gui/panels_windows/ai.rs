@@ -73,7 +73,7 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
     let Ok(mut chat) = state.lock() else { return };
     receive(&mut chat);
     let mut open = true;
-    egui::Window::new(crate::i18n::tr("ai-title")).id(egui::Id::new("win_ai")).open(&mut open).default_width(500.0).show(ctx, |ui| {
+    egui::Window::new(crate::i18n::tr("ai-title")).id(egui::Id::new("win_ai")).open(&mut open).default_width(500.0).default_height(700.0).show(ctx, |ui| {
         egui::ScrollArea::vertical().max_height(700.0).show(ui, |ui| {
             ui.label(crate::i18n::tr("ai-intro"));
             ui.collapsing(crate::i18n::tr("ai-settings"), |ui| {
