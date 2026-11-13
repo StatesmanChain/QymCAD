@@ -140,7 +140,7 @@ jobs:
           QYMCAD_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           OCCT_INCLUDE_DIR: C:\occt\include\opencascade
           OCCT_LIB_DIR: C:\occt\lib
-        run: cargo build --release --locked --bin qymcad
+        run: cargo build --release  --bin qymcad
 
       # THE TAG NAMES THE PACKAGE when the button was pressed against one; every other build is named by
       # the manifest version plus the commit. Two dev builds three days apart must not share a file name.
@@ -324,7 +324,7 @@ jobs:
           QYMCAD_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           OCCT_INCLUDE_DIR: /Users/runner/occt/include/opencascade
           OCCT_LIB_DIR: /Users/runner/occt/lib
-        run: cargo build --release --locked --bin qymcad
+        run: cargo build --release  --bin qymcad
 
       # THE SIGNING CERTIFICATE, from two secrets: `MACOS_CERT_P12` is the base64 of the .p12 and
       # `MACOS_CERT_PASSWORD` its password, both made by `packaging/macos/make-signing-cert.sh`. A missing
