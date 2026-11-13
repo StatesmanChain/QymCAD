@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Prepare the released geometry kernel
         shell: pwsh
         run: ./packaging/win/prepare-ai-kernel.ps1
@@ -32,8 +34,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Exercise the assistant through the window
         env:
-          QYMCAD_AI_SCREENSHOT: ai-preview.png
-        run: cargo test -p qymcad --test ai_assistant --locked -- --nocapture --skip ai_preview_add_undo_and_redo_preserve_the_original_document
+          QYMCAD_AI_SCREENSHOT: ${{ github.workspace }}/ai-preview.png
+        run: cargo test -p qymcad --test ai_assistant --locked -- --nocapture
       - name: Build portable application
         run: cargo build --release --locked --bin qymcad
       - name: Package portable ZIP

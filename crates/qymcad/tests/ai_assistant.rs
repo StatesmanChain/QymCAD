@@ -9,11 +9,6 @@ fn word(s: &mut Session, key: &str) {
     let text = s.word(key);
     s.press_word(&text);
 }
-fn fill(s: &mut Session, index: usize, text: &str) {
-    let fields: Vec<_> = s.widgets().into_iter().filter(|w| w.kind == Kind::TextField).collect();
-    let field = fields.get(index).unwrap_or_else(|| panic!("field {index} is on screen: {fields:?}"));
-    s.click(field.rect.center()).chord(Modifiers::COMMAND, Key::A).type_text(text);
-}
 #[test]
 fn ai_preview_add_undo_and_redo_preserve_the_original_document() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -57,19 +52,27 @@ fn ai_preview_add_undo_and_redo_preserve_the_original_document() {
     word(&mut s, "menu-windows");
     word(&mut s, "ai-title");
     word(&mut s, "ai-settings");
-    fill(&mut s, 0, &format!("http://{address}/v1/chat/completions"));
-    fill(&mut s, 1, "test-model");
-    fill(&mut s, 3, "Make a housing 150 x 100 x 60 mm, wall and floor 3 mm");
+    s.fill(&s.word("ai-endpoint"), &format!("http://{address}/v1/chat/completions"));
+    s.fill(&s.word("ai-model"), "test-model");
+    s.fill(&s.word("ai-prompt"), "Make a housing 150 x 100 x 60 mm, wall and floor 3 mm");
     word(&mut s, "ai-settings");
+    let send = s.word("ai-send");
+    assert!(s.widgets().iter().any(|w| w.kind == Kind::Button && w.label == send && w.enabled), "the completed prompt enables generation: {:?}", s.words());
     word(&mut s, "ai-send");
-    s.wait_for("a checked preview", Duration::from_secs(30), |s| {
-        let label = s.word("ai-apply");
-        s.widgets().iter().any(|w| w.kind == Kind::Button && w.label == label && w.enabled)
-    });
-    assert_eq!(s.document().parts, before.parts, "preview leaves the document alone");
+    let preview = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        s.wait_for("a checked preview", Duration::from_secs(30), |s| {
+            let label = s.word("ai-apply");
+            s.widgets().iter().any(|w| w.kind == Kind::Button && w.label == label && w.enabled)
+        });
+    }));
     if let Ok(path) = std::env::var("QYMCAD_AI_SCREENSHOT") {
         std::fs::write(path, s.snapshot().png()).unwrap();
     }
+    if let Err(reason) = preview {
+        eprintln!("Assistant window after the request: {:?}", s.words());
+        std::panic::resume_unwind(reason);
+    }
+    assert_eq!(s.document().parts, before.parts, "preview leaves the document alone");
     word(&mut s, "ai-apply");
     let after = s.document();
     assert_eq!(after.parts.len(), before.parts.len() + 1);
