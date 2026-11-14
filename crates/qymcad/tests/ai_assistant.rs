@@ -167,7 +167,7 @@ fn exercise(input: Input) {
 
 fn flat_plate_has_no_occluded_triangles(picture: &qymcad::Picture) {
     let mut bounds = qymcad::Rect::NOTHING;
-    for (index, pixel) in picture.rgba.chunks_exact(4).enumerate() {
+    for (index, pixel) in picture.rgba.as_chunks::<4>().0.iter().enumerate() {
         if (65..=130).contains(&pixel[0]) && pixel[1] == pixel[0] + 55 && pixel[2] == pixel[0] + 90 {
             bounds.extend_with(qymcad::pos2((index % picture.width) as f32, (index / picture.width) as f32));
         }

@@ -32,8 +32,8 @@ pub(super) fn draw(ui: &mut egui::Ui, project: &Project) {
         angle += f64::from(ui.input(|i| i.pointer.delta().x)) * 0.01;
     }
     ui.ctx().data_mut(|d| d.insert_temp(key, angle));
-    let ppp = ui.ctx().pixels_per_point().clamp(1.0, 3.0);
-    let frame = Frame { document: project.state_key(), angle, size: [(response.rect.width() * ppp).round().clamp(1.0, 2400.0) as usize, (response.rect.height() * ppp).round() as usize] };
+    let ppp = ui.ctx().pixels_per_point().clamp(1.0, 3.0).min(2400.0 / response.rect.width().max(1.0));
+    let frame = Frame { document: project.state_key(), angle, size: [(response.rect.width() * ppp).round().max(1.0) as usize, (response.rect.height() * ppp).round().max(1.0) as usize] };
     let cache_key = response.id.with("depth_preview");
     let mut cached = ui.ctx().data(|d| d.get_temp::<Cached>(cache_key));
     if cached.as_ref().is_none_or(|c| c.frame != frame) {
