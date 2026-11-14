@@ -28,5 +28,5 @@
 Геометрия проверяется перед добавлением: требуется одно корректное замкнутое твёрдое тело. Проверка геометрии не гарантирует, что ИИ правильно понял все размеры и назначение детали — сверяйте результат.
 
 Исходный проект: https://github.com/QymIs-Tech/QymCAD
-Доработка: ветка `codex/ai-assistant` в https://github.com/StatesmanChain/QymCAD
+Доработка: отдельная ветка `codex/ai-portable` — https://github.com/StatesmanChain/QymCAD/tree/codex/ai-portable
 Лицензия: AGPL-3.0-or-later; см. LICENSE.txt.

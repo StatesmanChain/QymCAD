@@ -2,11 +2,11 @@ name: QymCAD AI portable Windows
 on:
   workflow_dispatch:
   push:
-    branches: [codex/ai-assistant]
+    branches: [codex/ai-portable]
 permissions:
   contents: read
 concurrency:
-  group: qymcad-ai-windows
+  group: qymcad-ai-portable-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   windows:
