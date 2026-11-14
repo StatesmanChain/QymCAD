@@ -1096,6 +1096,8 @@ pub struct WinCtx<'a> {
 /// The named things a window can ask for.
 #[derive(Clone)]
 pub enum WinAsk {
+    /// Choose an image for the assistant through the application's modal chooser.
+    AiImage(std::sync::mpsc::Sender<std::path::PathBuf>),
     /// A checked independent part.
     AiPart(std::sync::Arc<qymcad_core::model::Project>),
     /// Leave the document (the navigation question answers with this).

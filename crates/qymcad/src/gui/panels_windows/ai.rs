@@ -4,6 +4,7 @@ use qymcad_ai::{Connection, Exchange, Proposal};
 use qymcad_core::model::Project;
 use std::sync::{Arc, Mutex, mpsc};
 mod preview;
+pub(crate) mod attachments;
 struct Answer {
     request: String,
     proposal: Proposal,
@@ -17,6 +18,7 @@ struct Chat {
     answer: Option<Answer>,
     pending: Option<mpsc::Receiver<Result<Answer, &'static str>>>,
     notice: Option<Notice>,
+    images: attachments::Gallery,
 }
 fn state(ctx: &egui::Context) -> Arc<Mutex<Chat>> {
     ctx.data_mut(|d| d.get_temp_mut_or_insert_with(egui::Id::new("ai_chat"), || Arc::new(Mutex::new(Chat::default()))).clone())
@@ -72,6 +74,9 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
     let state = state(ctx);
     let Ok(mut chat) = state.lock() else { return };
     receive(&mut chat);
+    if let Some(key) = chat.images.poll(ctx) {
+        chat.notice = Some(Notice::refusal(crate::i18n::tr(key)));
+    }
     let mut open = true;
     egui::Window::new(crate::i18n::tr("ai-title")).id(egui::Id::new("win_ai")).open(&mut open).default_width(500.0).default_height(700.0).show(ctx, |ui| {
         egui::ScrollArea::vertical().max_height(700.0).show(ui, |ui| {
@@ -100,12 +105,15 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
             ui.separator();
             ui.label(crate::i18n::tr("ai-prompt"));
             ui.add(egui::TextEdit::multiline(&mut chat.prompt).desired_rows(4).desired_width(f32::INFINITY).char_limit(12000).hint_text(crate::i18n::tr("ai-example")));
+            let activity = if chat.pending.is_some() { attachments::Activity::Generating } else { attachments::Activity::Idle };
+            chat.images.draw(ui, wc, activity);
             ui.small(crate::i18n::tr("ai-sent"));
             ui.horizontal(|ui| {
-                let busy = chat.pending.is_some();
-                if ui.add_enabled(!busy && !chat.prompt.trim().is_empty(), egui::Button::new(crate::i18n::tr("ai-send"))).clicked() {
+                let busy = chat.pending.is_some() || chat.images.loading();
+                if ui.add_enabled(!busy && (!chat.prompt.trim().is_empty() || !chat.images.is_empty()), egui::Button::new(crate::i18n::tr("ai-send"))).clicked() {
                     let connection = chat.connection.clone();
-                    let prompt = chat.prompt.clone();
+                    let prompt = if chat.prompt.trim().is_empty() { crate::i18n::tr("ai-image-prompt-default") } else { chat.prompt.clone() };
+                    let images = chat.images.inputs();
                     let history = chat.history.clone();
                     let (tx, rx) = mpsc::channel();
                     chat.pending = Some(rx);
@@ -113,7 +121,7 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
                     chat.notice = None;
                     let repaint = ctx.clone();
                     let _worker = qymcad_kernel::worker(move || {
-                        let result = qymcad_ai::ask(&connection, &prompt, &history).and_then(checked).map(|mut a| {
+                        let result = qymcad_ai::ask(&connection, qymcad_ai::Request { prompt: &prompt, images: &images }, &history).and_then(checked).map(|mut a| {
                             a.request = prompt;
                             a
                         });
@@ -121,7 +129,7 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
                         repaint.request_repaint();
                     });
                 }
-                if busy {
+                if chat.pending.is_some() {
                     ui.spinner();
                     ui.label(crate::i18n::tr("ai-wait"));
                     if ui.button(crate::i18n::tr("ai-cancel")).clicked() {
@@ -135,6 +143,7 @@ pub(super) fn window(wc: &mut qymcad_ui_state::WinCtx, ctx: &egui::Context) {
                     chat.answer = None;
                     chat.notice = None;
                     chat.prompt.clear();
+                    chat.images.clear();
                 }
             });
             if let Some(n) = &chat.notice {

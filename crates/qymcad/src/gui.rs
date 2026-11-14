@@ -211,6 +211,7 @@ impl App {
     pub(crate) fn do_win_asks(&mut self, asks: Vec<WinAsk>, ctx: &egui::Context) {
         for a in asks {
             match a {
+                WinAsk::AiImage(tx) => self.ask_open_file(crate::gui::panels_windows::ai_image_dialog(), move |_, path| crate::gui::panels_windows::ai_image_chosen(&tx, path)),
                 WinAsk::AiPart(part) => {
                     if let Some(id) = crate::gui::panels_windows::apply_ai_part(&mut self.part_ctx(), &part) {
                         self.enter_component(id);
@@ -1385,20 +1386,9 @@ impl App {
 
     // ============ The splash screen and the progress of background work ============
 
-    /// THE TITLE FOLLOWS THE DOCUMENT: which file is open, and whether it holds unsaved work.
-    ///
-    /// Sent only when it has changed. A viewport command every frame is a message to the window manager
-    /// sixty times a second for a string that moves a few times an hour, and on some of them it makes the
-    /// title flicker.
     fn keep_the_title_current(&mut self, ctx: &egui::Context) {
-        // THE DIRTY FLAG FIRST: it is a `&mut self` call now (the rebuild moved behind a context), and
-        // taking it inside the argument list would borrow `self` twice in one expression.
         let dirty = qymcad_ui_state::is_dirty(&mut self.rebuild_ctx());
-        let want = crate::gui::window_title::window_title(self.disk.project_path.as_deref(), dirty);
-        if want != self.disk.title_shown {
-            ctx.send_viewport_cmd(egui::ViewportCommand::Title(want.clone()));
-            self.disk.title_shown = want;
-        }
+        window_title::refresh(ctx, window_title::TitleState { path: self.disk.project_path.as_deref(), dirty }, &mut self.disk.title_shown);
     }
 
     /// Recompute the WHOLE timeline from scratch (the Edit -> Rebuild everything item). Every node is

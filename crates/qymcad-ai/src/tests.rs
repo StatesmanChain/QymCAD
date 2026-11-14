@@ -58,6 +58,6 @@ fn local_endpoint_receives_a_request_and_returns_a_recipe() {
         write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
     });
     let c = Connection { endpoint: format!("http://{address}/v1/chat/completions"), model: "local-model".into(), key: "local-secret".into() };
-    assert!(ask(&c, "Make a housing", &[]).unwrap().plan.is_some());
+    assert!(ask(&c, Request { prompt: "Make a housing", images: &[] }, &[]).unwrap().plan.is_some());
     worker.join().unwrap();
 }

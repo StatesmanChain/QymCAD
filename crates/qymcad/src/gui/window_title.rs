@@ -33,6 +33,20 @@ pub(crate) fn window_title(path: Option<&str>, unsaved: bool) -> String {
     format!("{} — {stem}{mark}", super::APP_NAME)
 }
 
+pub(crate) struct TitleState<'a> {
+    pub path: Option<&'a str>,
+    pub dirty: bool,
+}
+
+/// Send the title only when it changed, rather than once per frame.
+pub(crate) fn refresh(ctx: &egui::Context, state: TitleState<'_>, shown: &mut String) {
+    let want = window_title(state.path, state.dirty);
+    if want != *shown {
+        ctx.send_viewport_cmd(egui::ViewportCommand::Title(want.clone()));
+        *shown = want;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::window_title;

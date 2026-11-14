@@ -14,18 +14,23 @@ jobs:
     timeout-minutes: 90
     env:
       CARGO_BUILD_JOBS: 3
-      QYMCAD_VERSION: 0.1.1-ai.1
+      QYMCAD_VERSION: 0.1.1-ai.2
     steps:
       - uses: actions/checkout@v7
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
+          cache-workspace-crates: true
       - name: Prepare the released geometry kernel
         shell: pwsh
         run: ./packaging/win/prepare-ai-kernel.ps1
       - name: Check all targets
-        run: cargo check --workspace --all-targets --locked
+        run: |
+          cargo check --workspace --all-targets --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --workspace --all-targets --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check recipes and API protocol
         run: |
           cargo test -p qymcad-core --lib ai:: --locked
@@ -47,7 +52,8 @@ jobs:
           Copy-Item target/release/qymcad.exe dist/QymCAD-AI/
           Copy-Item LICENSE dist/QymCAD-AI/LICENSE.txt
           Copy-Item THIRD-PARTY-NOTICES.md dist/QymCAD-AI/
-          Copy-Item AI_README_RU.md dist/QymCAD-AI/
+          Copy-Item ai-readme-ru.md dist/QymCAD-AI/
+          Copy-Item examples/ai/dimensioned-plate.png dist/QymCAD-AI/
           Compress-Archive dist/QymCAD-AI -DestinationPath dist/QymCAD-AI-Windows-x64.zip
       - name: Save portable ZIP
         uses: actions/upload-artifact@v7
@@ -60,5 +66,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ai-preview
-          path: ai-preview.png
+          path: ai*-preview.png
           if-no-files-found: ignore

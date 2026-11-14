@@ -22,3 +22,4 @@ pub(crate) use library::*;
 
 mod ai;
 pub(crate) use ai::apply_ai_part;
+pub(crate) use ai::attachments::{ai_image_chosen, ai_image_dialog};

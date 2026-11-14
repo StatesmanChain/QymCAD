@@ -2206,6 +2206,8 @@ dependencies = [
  "num-traits 0.2.19",
  "png 0.18.1",
  "tiff",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -3713,6 +3715,8 @@ dependencies = [
 name = "qymcad-ai"
 version = "0.1.1"
 dependencies = [
+ "base64 0.23.1",
+ "image",
  "qymcad-core",
  "serde",
  "serde_json",

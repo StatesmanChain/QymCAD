@@ -1,0 +1,6 @@
+{"message":"Plate 100 x 60 x 5 mm. One through hole, diameter 6 mm, centre 30 mm from the right edge and 15 mm from the top edge.","plan":{"name":"AI plate","operations":[
+{"id":"stock","type":"box","size":{"x":100,"y":60,"z":5}},
+{"id":"drill","type":"cylinder","radius":3,"height":7},
+{"id":"position","type":"move","source":"drill","offset":{"x":20,"y":15,"z":-1}},
+{"id":"plate","type":"boolean","base":"stock","tool":"position","operation":"cut"}
+]}}
