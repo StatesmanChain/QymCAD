@@ -134,6 +134,9 @@ fn exercise(input: Input) {
         eprintln!("Assistant window after the request: {:?}", s.words());
         std::panic::resume_unwind(reason);
     }
+    if matches!(input, Input::Drawing) {
+        flat_plate_has_no_occluded_triangles(&s.snapshot());
+    }
     assert_eq!(s.document().parts, before.parts, "preview leaves the document alone");
     word(&mut s, "ai-apply");
     let after = s.document();
@@ -160,4 +163,19 @@ fn exercise(input: Input) {
     assert_eq!(s.document().parts.len(), after.parts.len());
     assert!(s.id_clashes().is_empty());
     server.join().unwrap();
+}
+
+fn flat_plate_has_no_occluded_triangles(picture: &qymcad::Picture) {
+    let mut bounds = qymcad::Rect::NOTHING;
+    for (index, pixel) in picture.rgba.chunks_exact(4).enumerate() {
+        if (65..=130).contains(&pixel[0]) && pixel[1] == pixel[0] + 55 && pixel[2] == pixel[0] + 90 {
+            bounds.extend_with(qymcad::pos2((index % picture.width) as f32, (index / picture.width) as f32));
+        }
+    }
+    assert!(bounds.width() > 100.0 && bounds.height() > 50.0, "the preview contains a plate");
+    // Inside the flat top face, away from the through hole and the silhouette.
+    // Sorting whole triangles painted the underside across this patch of the top.
+    let at = bounds.min + bounds.size() * qymcad::vec2(0.43, 0.35);
+    let actual = picture.colour_at(at);
+    assert!(qymcad::Picture::apart(actual, [117, 172, 207]) <= 1, "the top face has a uniform shade, got {actual:?}");
 }
